@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 
 const nodemailer = require("nodemailer");
+const nodemailerSMTPTransport = require("nodemailer-smtp-transport");
 const app = express();
 const port = 3000;
 // parse application/x-www-form-urlencoded
@@ -9,29 +10,27 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // parse application/json
 app.use(bodyParser.json());
 
-app.get("/", (req, res) => {
-    res.send("Hello world!");
-});
-
 // NodeMailer Config
 app.post("/", async (req, res) => {
-    const { email } = req.body;
+    const { name, email } = req.body;
     // create reusable transporter object using the default SMTP transport
-    let transporter = nodemailer.createTransport({
-        host: "smtp.ethereal.email",
-        port: 587,
-        secure: false, // true for 465, false for other ports
-        auth: {
-            user: "trinity.moore@ethereal.email", // ethereal user
-            pass: "KmP1Te9cmxS3gp3E2w", // ethereal password
-        },
-    });
+    let transporter = nodemailer.createTransport(
+        nodemailerSMTPTransport({
+            host: "smtp.ethereal.email",
+            port: 587,
+            secure: false,
+            auth: {
+                user: "jazlyn.olson64@ethereal.email", // ethereal user
+                pass: "9ft5HpqCUmXGSVjxBG", // ethereal password
+            },
+        })
+    );
 
     const msg = {
-        from: '"Lu Email Testing App" <luemail@example.com>', // sender address
-        to: `${email}`, // list of receivers
-        subject: "LU Email Testing", // Subject line
-        text: "This is a Test Mail.Don't Worry!!", // plain text body
+        from: "<luemail@example.com>",
+        to: `${email}`,
+        subject: "LU Email Testing",
+        text: "This is a Test Mail.Don't Worry!!",
         html: `<!DOCTYPE html>
         <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
 
@@ -99,14 +98,14 @@ app.post("/", async (req, res) => {
                                         <h1
                                             style="margin-top:0;margin-bottom:16px;font-size:26px;line-height:32px;font-weight:bold;letter-spacing:-0.02em; text-align: center;">
                                             Welcome to the Leading University</h1>
-                                        <p>Dear <span style="font-weight: bold;">Tanzina Islam Moumi,</span></p>
+                                        <p>Dear <span style="font-weight: bold;">${name},</span></p>
                                         <p>Congratulation!</p>
                                         <p>Your final admission is successful. Your student ID is: <span
                                                 style="font-weight: bold;">0182220012131003.</span> Please use
                                             the following link to login your dashboard with the email: <span
-                                                style="font-weight: bold;">moumi@gmail.com</span> and
+                                                style="font-weight: bold;">${email}</span> and
                                             password: <span style="font-weight: bold;">6KUW9I:</span>For Login
-                                            <span style="font-weight: bold;">192.168.161.232:4040/login</span>
+                                            <a target="_blank" rel="noopener noreferrer" href = "192.168.161.232:4040/login" style="font-weight: bold;">192.168.161.232:4040/login</a>
                                         </p>
                                     </td>
                                 </tr>
@@ -141,14 +140,13 @@ app.post("/", async (req, res) => {
         </html>`, // html body
     };
     // send mail with defined transport object
-    const info = await transporter.sendMail(msg);
-
-    console.log("Message sent: %s", info.messageId);
-    // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
-
-    // Preview only available when sending through an Ethereal account
-    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-    // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+    await transporter.sendMail(msg, (err, data) => {
+        if (err) {
+            console.log("Error Occurs", err);
+        } else {
+            console.log("Email Send Successfully");
+        }
+    });
 
     res.send("Email Sent!");
 });
